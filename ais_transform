@@ -1,0 +1,52 @@
+import numpy as np
+import pandas as pd
+import pickle
+
+#Data downloaded from https://marinecadastre.gov/ais/
+path=r"D:\Downloads\AIS_2017_01_Zone06\AIS_ASCII_by_UTM_Month\2017_v2"
+pathf=path+r"\AIS_2017_01_Zone06.csv"
+AISactivity={'moored': 5,
+ 'under way using engine': 0,
+ 'at anchor': 1,
+ 'not under command': 2,
+ 'restricted maneuverability': 3,
+ 'constrained by her draught': 4,
+ 'aground': 6,
+ 'engaged in fishing': 7,
+ 'under way sailing': 8,
+ 'reserved for future use (9)': 9,
+ 'reserved for future use (10)': 10,
+ 'power-driven vessel pushing ahead or towing alongside': 12,
+ 'power-driven vessel towing astern': 11,
+ 'reserved for future use (13)': 13,
+ 'AIS-SART (active); MOB-AIS; EPIRB-AIS': 14,
+ np.nan: 15,
+ 'undefined': 15}
+df=pd.read_csv(pathf)
+
+for i in range(df.shape[0]):
+    if (i%100000==0): 
+        print(i)
+    b=df['Status'][i]
+    if b in AISactivity:
+        df.iat[i,df.columns.get_loc('Status')]=AISactivity[b]
+        
+df2=df[['MMSI','BaseDateTime', 'LAT', 'LON', 'SOG', 'COG', 'Heading','Status','Draft', 'Cargo']]
+dtypedict={'MMSI':np.int32,'BaseDateTime':np.datetime64, 'LAT':np.float32, 'LON':np.float32, 'SOG':np.float32, 'COG':np.float32, 'Heading':np.int16,'Status':np.int8,'Draft':np.float32, 'Cargo':np.float32}
+dtp=[('MMSI','<i4'),('BaseDateTime','S19'), ('LAT','<f4'), ('LON','<f4'), ('SOG','<f4'), ('COG','<f4'), ('Heading','<i2'),('Status','<i1'),('Draft','<f4'), ('Cargo','<f4')]
+
+db=np.recarray(df2.shape[0],dtype=dtp)
+
+for key in dtypedict:
+    for i in range(df2.shape[0]):
+        db[key][i]=df2[key][i]
+
+pickle.dump(shipdata, open( "db.p", "wb" ) )
+        
+np.save('db.npy',db)
+
+for i in range(df.shape[0]):
+    if not(df['MMSI'].iloc[i] in mmsi):
+        mmsi.append(df['MMSI'].iloc[i])
+        shipdata.append(df.iloc[i])
+        
